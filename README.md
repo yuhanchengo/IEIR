@@ -1,5 +1,5 @@
 ##### 系統背景
-version: solr 4.3 OS: windows
+version: solr 6.2.1 OS: windows
 
 # 1. 資料預處理及上傳至solr
 
