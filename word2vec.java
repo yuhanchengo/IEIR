@@ -1,33 +1,26 @@
-### Assignment2 improving chatbot with Word-Embedding and SVM-Rank
+package data_processing;
 
-#### Building word-Embedding model in R
-```R
-library(jiebaR)
-library(readr)
-library(wordVectors)
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-cutter = worker("hmm", stop_word = "stop_words.utf8", hmm="hmm_model.utf8", bylines = T)
-# corpus.txt是ntcir提供的post, comment的文字內容
-text = read_file("corpus.txt")
-article_words = segment(text, cutter)
-article_word_vectors = sapply(article_words, paste, collapse = " ")
-writeLines(article_word_vectors, "corpus_vec.txt")
-model_SKIP = train_word2vec("corpus_vec.txt", output="skip_gram.bin", threads = 3, vectors=300, window = 7, force = T, min_count = 7)
-# 此csv檔為每個詞所對應的vector的table
-write.csv(model_SKIP,"skip_gram.csv")
-```
-#### Store word-embedding model trained in R to HashMap in Java
-```java
-public static HashMap<Object, ArrayList<Double>> wordVecDict = new HashMap<Object, ArrayList<Double>>();
-public static void createHashMap(){
+public class word2vec {
+	public static HashMap<Object, ArrayList<Double>> wordVecDict = new HashMap<Object, ArrayList<Double>>();
+	word2vec(){
+		createHashMap();
+	}
+	public static void createHashMap(){
 		try{
-			BufferedReader br = new BufferedReader(new FileReader("modelSC.csv"));
+			BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\joy\\Desktop\\IEIR\\modelSC.csv"));
 			for(int i =0; i<2; i++){
 				br.readLine();
 			}
-
+			
 			while(br.ready()) {
-
+				
 				ArrayList<Double> vector = new ArrayList<Double>();
 				String[] s = br.readLine().split(",");
 				for(int i=1; i<s.length; i++){
@@ -41,17 +34,7 @@ public static void createHashMap(){
 			e.printStackTrace();
 		}
 	}
-```
-
-#### Convert wordVector to docVector
-- #### 概念：document vector 就是取出每個維度最小及最大的元素來分別組成兩個同樣為300維的vector
-![](figure/a2_1.png)
-![](figure/a2_2.png)
-![](figure/a2_3.png)
-![](figure/a2_4.png)
-
-```Java
-public double[] docToVec(String document){
+	public double[] docToVec(String document){
 		double[] docVec = new double[600];
 		String[] inputToken = document.split(" ");
 		Boolean first = true;
@@ -90,7 +73,7 @@ public double[] docToVec(String document){
 						}
 					}
 				}
-
+				
 			}else if(wordVec != null && first == true){
 				for(int j=0; j<wordVec.size(); j++){
 					docVec[j] = wordVec.get(j);
@@ -109,13 +92,7 @@ public double[] docToVec(String document){
 		}
 		return docVec;
 	}
-
-```
-
-#### Calculate cosine Similarity between Documents
-
-```java
-public String cosineSimilarity(double[] query, double[] doc){
+	public String cosineSimilarity(double[] query, double[] doc){
 		DecimalFormat df = new DecimalFormat("#.########");
 		double dotProduct = 0,queryNorm =0, docNorm =0, cosSimilarity=0;
 		for(int i=0; i<query.length; i++){
@@ -123,6 +100,9 @@ public String cosineSimilarity(double[] query, double[] doc){
 			docNorm += Math.pow(doc[i], 2);
 			dotProduct += query[i]*doc[i];
 		}
+//		System.out.println("dotProduct : " + dotProduct);
+//		System.out.println("queryNorm : " + queryNorm);
+//		System.out.println("docNorm : " + docNorm);
 		if(queryNorm == 0){
 			queryNorm = 1;
 		}else if(docNorm == 0){
@@ -132,15 +112,10 @@ public String cosineSimilarity(double[] query, double[] doc){
 		System.out.println(cosSimilarity);
 		return df.format(cosSimilarity);
 	}
-
-```
-
-#### Call Batch file to execute SVMRank prediction
-```java
-public void predictSVMRank(){
+	public void predictSVMRank(){
 		try{
 		Runtime rt = Runtime.getRuntime();
-		Process pr = rt.exec("cmd /c start predict.bat");
+		Process pr = rt.exec("cmd /c start C:\\Users\\joy\\Desktop\\svm_rank_windows\\predict.bat");
 		int processComplete = pr.waitFor();
 		System.out.println(processComplete);
 		}catch(IOException e){
@@ -149,23 +124,4 @@ public void predictSVMRank(){
 			exp.printStackTrace();
 		}
 	}
-
-```
-
-### SVMRank model
-Training data: 11520 (767 queries)
-
-#### Features for SVM-Rank (Total of 1201 features)
-- Query DocVector(dim: 600)
-- Comment DocVector(dim: 600)
-- Cosine Similarity value of query and comment
-
-#### Basis of reranking
-1. SVM Score : 調整solr對field的weight，後得到的分數
-2. Cosine Similarity : 上述feature中的Cosine Similarity來當排序基準
-3. SVMRank Score : SVMRank的model跑出的分數
-4. AVG Score : 將以上三個分數加起來平均
-
-#### Result
-我認為依Cosine Similarity進行排序的結果是最好的，但是SVMRank的結果只差一點點
-再來是Solr Score, 最後則是AVG Score
+}
