@@ -1,4 +1,4 @@
-### Assignment2 improving chatbot with Word-Embedding and SVM-Rank
+### Improving chatbot with Word-Embedding and SVM-Rank
 
 #### Building word-Embedding model in R
 ```R
@@ -161,11 +161,11 @@ Training data: 11520 (767 queries)
 - Cosine Similarity value of query and comment
 
 #### Basis of reranking
-1. SVM Score : 調整solr對field的weight，後得到的分數
-2. Cosine Similarity : 上述feature中的Cosine Similarity來當排序基準
-3. SVMRank Score : SVMRank的model跑出的分數
-4. AVG Score : 將以上三個分數加起來平均
+1. SVM Score : The score of the document calculated by Solr through tuning the weight of different fields in the Solr config file.
+2. Cosine Similarity : The cosine similarity of the query and the retrieved comment.
+3. SVMRank Score : The score given by the SVMRank model.
+4. AVG Score : The average score of the three scores above.
 
 #### Result
-我認為依Cosine Similarity進行排序的結果是最好的，但是SVMRank的結果只差一點點
-再來是Solr Score, 最後則是AVG Score
+Performance based on the above 4 reranking mechanisms:
+Cosine Similarity > SVMRank > Solr > AVG Score
